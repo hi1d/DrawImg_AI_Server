@@ -1,15 +1,14 @@
-"""
-Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
-Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
-"""
-
+from io import BytesIO
+from uuid import uuid4
 import numpy as np
 
 from spade.model import Pix2PixModel
 from spade.dataset import get_transform
 from torchvision.transforms import ToPILImage
 from PIL import Image
-import cv2
+from s3_connect import s3_connection
+from aws_config import AWS_S3_BUCKET_NAME
+
 
 
 def evaluate(labelmap):
@@ -19,10 +18,11 @@ def evaluate(labelmap):
         'load_size': 512,
         'aspect_ratio': 1.0,
         'isTrain': False,
-        'checkpoints_dir': 'flask/pretrained/',
+        'checkpoints_dir': 'gaugan/flask/pretrained/',
         'which_epoch': 'latest',
         'use_gpu': False
     }
+
     model = Pix2PixModel(opt)
     model.eval()
 
@@ -46,38 +46,19 @@ def evaluate(labelmap):
     }
     generated = model(data, mode='inference')
     print("generated_image:", generated.shape)
-
-    return generated
+    s3 = s3_connection()
+    file_name = uuid4().hex
+    image = to_image(generated)
+    buffer = BytesIO()
+    image.save(buffer, 'PNG')
+    buffer.seek(0)
+    s3.upload_fileobj(buffer, AWS_S3_BUCKET_NAME, f"gau/{file_name}.png", ExtraArgs={'ACL':'public-read'})
+    print('업로드 완료')
+    url = f'https://sparta-team4-project.s3.ap-northeast-2.amazonaws.com/gau/{file_name}.png'
+    return url
 
 def to_image(generated):
     to_img = ToPILImage()
     normalized_img = ((generated.reshape([3, 512, 512]) + 1) / 2.0) * 255.0
     return to_img(normalized_img.byte().cpu())
 
-def img_to_oilpaint(image):
-    net = cv2.dnn.readNetFromTorch('flask/models/eccv16/starry_night.t7')
-
-    img =np.array(image)
-
-    # 전처리 
-    h, w, c = img.shape
-
-    img = cv2.resize(img, dsize=(500, int(h/w * 500)))
-
-    img = img[162:513, 185:428]
-
-    MEAN_VALUE = [103.933, 116.779, 123.680]
-    blob = cv2.dnn.blobFromImage(img, mean=MEAN_VALUE)
-
-    # 후처리 
-    net.setInput(blob)
-    output = net.forward()
-
-    output = output.squeeze().transpose((1,2,0))
-    output += MEAN_VALUE
-
-    output = np.clip(output, 0, 255)
-    output = output.astype('uint8')
-
-    output = Image.fromarray(cv2.cvtColor(output, cv2.COLOR_BGR2RGB))
-    return output
