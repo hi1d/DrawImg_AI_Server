@@ -1,4 +1,5 @@
 from uuid import uuid4
+from click import style
 import tensorflow as tf
 import numpy as np
 from io import BytesIO
@@ -50,9 +51,9 @@ def nst_apply(url) :
         Bucket=AWS_S3_BUCKET_NAME,
         Prefix=('style/')
     )
-    style_num = len(directory['Contents'][1:])
-    style_list = [ f'https://sparta-team4-project.s3.ap-northeast-2.amazonaws.com/style/{i}.jpg' for i in range(1, style_num+1)]
-
+    styles = directory['Contents'][1:]
+    styles = [i['Key'].split('/')[-1].split('.')[0] for i in styles]
+    style_list = [ f'https://sparta-team4-project.s3.ap-northeast-2.amazonaws.com/style/{i}.jpg' for i in styles]
     image_urls = []
 
     res = requests.get(url)
@@ -80,7 +81,7 @@ def style_upload(img, key):
     if key == '':
         name = str(len(directory['Contents'][1:])+ 1) + '.jpg'
     else : 
-        name = str(key) + '.jpg'
+        name = str(key) + '.png'
     print(name)
     res = requests.get(img)
     img = Image.open(BytesIO(res.content)).convert('RGB')
@@ -90,7 +91,7 @@ def style_upload(img, key):
     s3.put_object(
         Bucket = AWS_S3_BUCKET_NAME,
         Body = buffer,
-        Key = f"style/{name}",
+        Key = f"email/img/{name}",
         ACL = 'public-read'
     )
     print('업로드 완료')
