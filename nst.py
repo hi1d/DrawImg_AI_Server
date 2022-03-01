@@ -1,9 +1,8 @@
 from uuid import uuid4
-from click import style
 import tensorflow as tf
 import numpy as np
 from io import BytesIO
-from PIL import Image, ImageEnhance
+from PIL import Image
 import requests
 from s3_connect import s3_connection
 from aws_config import AWS_S3_BUCKET_NAME
@@ -38,11 +37,11 @@ def upload_tensor_img(tensor, s3):
     s3.put_object(
         Bucket = AWS_S3_BUCKET_NAME,
         Body = buffer,
-        Key = f"nst/{file_name}.png",
+        Key = f"nst/{file_name}",
         ACL = 'public-read'
     )
     print('업로드 완료')
-    url = f'https://sparta-team4-project.s3.ap-northeast-2.amazonaws.com/nst/{file_name}.png'
+    url = f'https://sparta-team4-project.s3.ap-northeast-2.amazonaws.com/nst/{file_name}'
     return url
 
 def nst_apply(url) :
@@ -54,9 +53,9 @@ def nst_apply(url) :
     styles = directory['Contents'][1:]
     styles = [i['Key'].split('/')[-1].split('.')[0] for i in styles]
     style_list = [ f'https://sparta-team4-project.s3.ap-northeast-2.amazonaws.com/style/{i}.jpg' for i in styles]
-    image_urls = []
-
+    image_urls = [url]
     res = requests.get(url)
+
     img = Image.open(BytesIO(res.content)).convert('RGB')
     content_image = tf.keras.preprocessing.image.img_to_array(img)    
 
@@ -71,28 +70,3 @@ def nst_apply(url) :
         image_urls.append(image_url)
         
     return image_urls
-
-def style_upload(img, key):
-    s3 = s3_connection()
-    directory = s3.list_objects_v2(
-        Bucket=AWS_S3_BUCKET_NAME,
-        Prefix=('style/')
-    )
-    if key == '':
-        name = str(len(directory['Contents'][1:])+ 1) + '.jpg'
-    else : 
-        name = str(key) + '.png'
-    print(name)
-    res = requests.get(img)
-    img = Image.open(BytesIO(res.content)).convert('RGB')
-    buffer = BytesIO()
-    img.save(buffer, 'PNG')
-    buffer.seek(0)
-    s3.put_object(
-        Bucket = AWS_S3_BUCKET_NAME,
-        Body = buffer,
-        Key = f"email/img/{name}",
-        ACL = 'public-read'
-    )
-    print('업로드 완료')
-    return 

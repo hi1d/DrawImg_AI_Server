@@ -4,7 +4,7 @@ from flask import Flask, current_app, jsonify, send_file, request
 from flask_cors import CORS
 import numpy as np
 from gau import evaluate
-from nst import nst_apply, style_upload
+from nst import nst_apply
 from pipo import convert
 
 
@@ -25,6 +25,7 @@ def index():
 @app.route('/style', methods = ['POST'])
 def style():
     url = request.form['url']
+    print(url)
     trans_style = nst_apply(url)
     return {'result':trans_style}
 
@@ -46,12 +47,6 @@ def pipo():
     
     return jsonify(msg='error')
 
-@app.route('/style_upload', methods = ['POST'])
-def upload_style():
-    img = request.form['img']
-    key = request.form['key']
-    style_upload(img, key)
-    return jsonify(result='success')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

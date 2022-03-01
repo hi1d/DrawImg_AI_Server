@@ -1,5 +1,4 @@
 ﻿from io import BytesIO
-from flask import jsonify, request
 import cv2
 from libs.utils import *
 from libs.imageProcessing import *
@@ -9,8 +8,6 @@ from PIL import Image
 from uuid import uuid4
 from s3_connect import s3_connection
 from aws_config import AWS_S3_BUCKET_NAME
-
-
 
 
 from multiprocessing import Process, Manager

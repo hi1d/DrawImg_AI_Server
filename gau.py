@@ -1,7 +1,6 @@
 from io import BytesIO
 from uuid import uuid4
 import numpy as np
-
 from spade.model import Pix2PixModel
 from spade.dataset import get_transform
 from torchvision.transforms import ToPILImage
