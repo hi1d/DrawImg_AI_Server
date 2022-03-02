@@ -6,7 +6,6 @@ from gau import evaluate
 from nst import nst_apply
 from pipo import convert
 
-
 app = Flask(__name__, static_url_path='')
 CORS(app)
 
