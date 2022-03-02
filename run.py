@@ -1,6 +1,5 @@
 
-import json
-from flask import Flask, current_app, jsonify, send_file, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import numpy as np
 from gau import evaluate
@@ -18,14 +17,9 @@ def generate():
     image = evaluate(labelmap)
     return {'url':image}
 
-@app.route('/')
-def index():
-    return current_app.send_static_file('index.html')
-
 @app.route('/style', methods = ['POST'])
 def style():
     url = request.form['url']
-    print(url)
     trans_style = nst_apply(url)
     return {'result':trans_style}
 

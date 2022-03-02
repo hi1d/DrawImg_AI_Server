@@ -7,6 +7,11 @@ from torchvision.transforms import ToPILImage
 from PIL import Image
 from s3_connect import s3_connection
 from aws_config import AWS_S3_BUCKET_NAME
+from pathlib import Path
+import os
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_DIR = os.path.join(BASE_DIR, 'pretrained')
 
 
 
@@ -17,7 +22,7 @@ def evaluate(labelmap):
         'load_size': 512,
         'aspect_ratio': 1.0,
         'isTrain': False,
-        'checkpoints_dir': 'gaugan/flask/pretrained/',
+        'checkpoints_dir': MODEL_DIR,
         'which_epoch': 'latest',
         'use_gpu': False
     }
